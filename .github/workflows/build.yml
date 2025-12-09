@@ -8,15 +8,15 @@ on:
       - '.gitignore'
       - 'docs/*'
   push:
-    branches:
-      - main
+    #branches:
+    #  - main
     tags:
       - 'v*'
-    paths-ignore:
-      - '**.md'
-      - '*.txt'
-      - '.gitignore'
-      - 'docs/*'
+    # paths-ignore:
+      # - '**.md'
+      # - '*.txt'
+      # - '.gitignore'
+      # - 'docs/*'
   release:
     types: [published]
 
@@ -141,12 +141,13 @@ jobs:
       matrix:
         #arch: [arm64, x86, x64]
         arch: [x86, x64]
-        btype: [Release, Debug]
+        #btype: [Release, Debug]
+        btype: [Release]
         include:
-          - arch: arm64
-            platform: ARM64
-            suffix: .arm64
-            pkg_suffix: arm64
+          #- arch: arm64
+          #  platform: ARM64
+          #  suffix: .arm64
+          #  pkg_suffix: arm64
 
           - arch: x86
             platform: Win32
@@ -177,12 +178,14 @@ jobs:
         msbuild code\win32\msvc2017\renderer.vcxproj -p:Configuration=${{ matrix.btype }},Platform=${{ matrix.platform }} /p:PlatformToolset=v143
         msbuild code\win32\msvc2017\quake3e.vcxproj -p:TargetName=quake3e,Configuration=${{ matrix.btype }},Platform=${{ matrix.platform }},UseWasapi=USE_WASAPI=0 /p:PlatformToolset=v143
         copy code\win32\msvc2017\output\quake3e.exe bin\quake3e${{ matrix.suffix }}.exe
+        copy code\win32\msvc2017\output\quake3e.pdb bin\quake3e${{ matrix.suffix }}.pdb
         msbuild code\win32\msvc2017\renderer.vcxproj -p:Configuration=${{ matrix.btype }},Platform=${{ matrix.platform }} -t:Clean
         msbuild code\win32\msvc2017\quake3e.vcxproj -p:TargetName=quake3e,Configuration=${{ matrix.btype }},Platform=${{ matrix.platform }},UseWasapi=USE_WASAPI=0 -t:Clean
 
         msbuild code\win32\msvc2017\renderervk.vcxproj -p:Configuration=${{ matrix.btype }},Platform=${{ matrix.platform }} /p:PlatformToolset=v143
         msbuild code\win32\msvc2017\quake3e.vcxproj -p:TargetName=quake3e,Configuration=${{ matrix.btype }},Platform=${{ matrix.platform }},UseWasapi=USE_WASAPI=0 /p:PlatformToolset=v143
         copy code\win32\msvc2017\output\quake3e.exe bin\quake3e-vulkan${{ matrix.suffix }}.exe
+        copy code\win32\msvc2017\output\quake3e.pdb bin\quake3e-vulkan${{ matrix.suffix }}.pdb
         msbuild code\win32\msvc2017\renderervk.vcxproj -p:Configuration=${{ matrix.btype }},Platform=${{ matrix.platform }} -t:Clean
         msbuild code\win32\msvc2017\quake3e.vcxproj -p:TargetName=quake3e,Configuration=${{ matrix.btype }},Platform=${{ matrix.platform }},UseWasapi=USE_WASAPI=0 -t:Clean
 
@@ -383,7 +386,7 @@ jobs:
         # retention-days: 5
 
   create-testing:
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    #if: github.ref == 'v*' && github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     #needs: [windows-msys32, windows-msvc, ubuntu-x86, ubuntu-arm64, macos-x86]
     needs: [windows-msys32, windows-msvc]
     runs-on: ubuntu-latest
@@ -393,10 +396,10 @@ jobs:
 
       - name: Create binary archives
         run: |
-          7z a -r quake3e-windows-mingw-x86.zip    ./windows-mingw-x86/*
-          7z a -r quake3e-windows-mingw-x86_64.zip ./windows-mingw-x86_64/*
           7z a -r quake3e-windows-msvc-x86.zip     ./windows-msvc-x86/*
           7z a -r quake3e-windows-msvc-x86_64.zip  ./windows-msvc-x86_64/*
+          7z a -r quake3e-windows-mingw-x86.zip    ./windows-mingw-x86/*
+          7z a -r quake3e-windows-mingw-x86_64.zip ./windows-mingw-x86_64/*
 #         7z a -r quake3e-macos-x86_64.zip         ./macos-x86_64/*
 #         7z a -r quake3e-macos-aarch64.zip        ./macos-aarch64/*
 #         7z a -r quake3e-linux-x86.zip            ./linux-x86/*
@@ -410,16 +413,16 @@ jobs:
         uses: czietz/action-automatic-releases@latest
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          automatic_release_tag: "latest"
+          automatic_release_tag: "${{ github.ref_name }}"
           prerelease: false
-          title: Latest Build
+          #title: ${{ github.ref_name }}
           files: |
             *.zip
 
   update-release:
     if: ${{ github.event_name == 'release' }}
     #needs: [windows-msys32, windows-msvc, ubuntu-x86, ubuntu-arm, macos-x86]
-    needs: [windows-msys32, windows-msvc]
+    needs: [windows-msvc]
     runs-on: ubuntu-latest
 
     strategy:

@@ -4752,6 +4752,7 @@ static void FS_Startup( void ) {
 #endif
 #endif
 
+#if 0
 	// add search path elements in reverse priority order
 	if (fs_steampath->string[0]) {
 		// handle multiple basegames:
@@ -4759,6 +4760,7 @@ static void FS_Startup( void ) {
 			FS_AddGameDirectory( fs_steampath->string, basegames[i] );
 		}
 	}
+#endif
 
 	if (fs_basepath->string[0]) {
 		// handle multiple basegames:
@@ -4778,6 +4780,7 @@ static void FS_Startup( void ) {
 	}
 #endif
 
+#if 0
 	// fs_homepath is somewhat particular to *nix systems, only add if relevant
 	// NOTE: same filtering below for mods and basegame
 	if ( fs_homepath->string[0] && Q_stricmp( fs_homepath->string, fs_basepath->string ) ) {
@@ -4786,6 +4789,7 @@ static void FS_Startup( void ) {
 			FS_AddGameDirectory( fs_homepath->string, basegames[i] );
 		}
 	}
+#endif
 
 	// check for additional game folder for mods
 	if ( fs_gamedirvar->string[0] != '\0' && !FS_IsBaseGame( fs_gamedirvar->string ) ) {

@@ -4696,7 +4696,7 @@ static void FS_Startup( void ) {
 	Cvar_SetDescription( fs_basepath, "Write-protected CVAR specifying the path to the installation folder of the game." );
 	fs_basegame = Cvar_Get( "fs_basegame", BASEGAME, CVAR_INIT | CVAR_PROTECTED );
 	Cvar_SetDescription( fs_basegame, "Write-protected CVAR specifying the path to the base game(s) folder(s), separated by '/'." );
-	fs_steampath = Cvar_Get( "fs_steampath", Sys_SteamPath(), CVAR_INIT | CVAR_PROTECTED | CVAR_PRIVATE );
+	fs_steampath = Cvar_Get("fs_steampath", "" /*Sys_SteamPath()*/, CVAR_INIT | CVAR_PROTECTED | CVAR_PRIVATE);
 
 	/* parse fs_basegame cvar */
 	if ( basegame_cnt == 0 || Q_stricmp( basegame, fs_basegame->string ) ) {
@@ -4723,7 +4723,7 @@ static void FS_Startup( void ) {
 		" 1 - keep file handle locked, more consistent, total pk3 files count limited to ~1k-4k\n" );
 #endif
 
-	homePath = Sys_DefaultHomePath();
+	homePath = NULL; //Sys_DefaultHomePath();
 	if ( homePath == NULL || homePath[0] == '\0' ) {
 		homePath = fs_basepath->string;
 	}

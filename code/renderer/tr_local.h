@@ -31,7 +31,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define MAX_TEXTURE_SIZE	2048 // must be less or equal to 32768
 
 #define USE_VBO
-#define USE_TESS_NEEDS_NORMAL
+//#define USE_TESS_NEEDS_NORMAL
 //#define USE_TESS_NEEDS_ST2
 #define USE_FBO
 

@@ -386,6 +386,7 @@ jobs:
         # retention-days: 5
 
   create-testing:
+    if: ${{ github.event_name == 'pull_request' }}
     #if: github.ref == 'v*' && github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     #needs: [windows-msys32, windows-msvc, ubuntu-x86, ubuntu-arm64, macos-x86]
     needs: [windows-msys32, windows-msvc]
@@ -422,7 +423,7 @@ jobs:
   update-release:
     if: ${{ github.event_name == 'release' }}
     #needs: [windows-msys32, windows-msvc, ubuntu-x86, ubuntu-arm, macos-x86]
-    needs: [windows-msvc]
+    needs: [windows-msys32, windows-msvc]
     runs-on: ubuntu-latest
 
     strategy:

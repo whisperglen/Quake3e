@@ -1254,6 +1254,8 @@ static const void *RB_DrawSurfs( const void *data ) {
 
 	RB_RenderDrawSurfList( cmd->drawSurfs, cmd->numDrawSurfs );
 
+	RB_DrawUniqueMeshes();
+
 #ifdef USE_VBO
 	VBO_UnBind();
 #endif
@@ -1578,6 +1580,8 @@ static const void *RB_SwapBuffers( const void *data ) {
 	backEnd.drawConsole = qfalse;
 
 	r_anaglyphMode->modified = qfalse;
+
+	QGL_EnableLogging((qboolean)r_logFile->integer);
 
 	return (const void *)(cmd + 1);
 }

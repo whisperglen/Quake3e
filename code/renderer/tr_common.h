@@ -134,4 +134,9 @@ IMPLEMENTATION SPECIFIC FUNCTIONS
 ====================================================================
 */
 
+void QGL_EnableLogging( qboolean enable );
+void GLimp_LogComment( const char* comment );
+void RB_SpawnUniqueMesh4Remix( const byte* data, size_t datalen );
+void RB_DrawUniqueMeshes( void );
+
 #endif

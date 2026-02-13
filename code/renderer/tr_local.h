@@ -1113,6 +1113,7 @@ typedef struct {
 	image_t					*flareImage;
 	image_t					*whiteImage;			// full of 0xff
 	image_t					*identityLightImage;	// full of tr.identityLightByte
+	image_t					*quadDamageImage;
 
 	shader_t				*defaultShader;
 	shader_t				*whiteShader;
@@ -1122,6 +1123,7 @@ typedef struct {
 
 	shader_t				*flareShader;
 	shader_t				*sunShader;
+	shader_t				*quadDamageShader;
 
 	int						numLightmaps;
 	image_t					**lightmaps;
@@ -1312,6 +1314,7 @@ extern	cvar_t	*r_anaglyphMode;
 extern	cvar_t	*r_greyscale;
 
 extern	cvar_t	*r_ignoreGLErrors;
+extern	cvar_t  *r_logFile;
 
 extern	cvar_t	*r_overBrightBits;
 extern	cvar_t	*r_mapOverBrightBits;

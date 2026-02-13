@@ -9,6 +9,9 @@
       <UniqueIdentifier>{afd6f707-5d94-4e75-8053-d2cacda81e3f}</UniqueIdentifier>
       <Extensions>h;hpp;inc</Extensions>
     </Filter>
+    <Filter Include="Source Files\extern">
+      <UniqueIdentifier>{f89aa515-a878-4300-b795-f55bdf33a563}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\renderer\tr_animation.c">
@@ -103,6 +106,12 @@
     </ClCompile>
     <ClCompile Include="..\..\renderer\tr_world.c">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\extern\fnvhash\hash_32a.c">
+      <Filter>Source Files\extern</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\extern\fnvhash\hash_64a.c">
+      <Filter>Source Files\extern</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

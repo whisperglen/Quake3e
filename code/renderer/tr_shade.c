@@ -909,6 +909,17 @@ void RB_StageIteratorGeneric( void )
 
 	RB_DeformTessGeometry();
 
+	if (r_logFile->integer) {
+		// don't just call LogComment, or we will get
+		// a call to va() every frame!
+		GLimp_LogComment(va("--- RB_StageIteratorGeneric( %s ) ---\n", tess.shader->name));
+	}
+
+	if (Q_streq(shader->name, "icons/quad"))
+	{
+		RB_SpawnUniqueMesh4Remix((byte*)shader->name, strlen(shader->name));
+	}
+
 	//
 	// set face culling appropriately
 	//
@@ -1094,4 +1105,126 @@ void RB_EndSurface( void ) {
 	// clear shader so we can tell we don't have any unclosed surfaces
 	tess.numIndexes = 0;
 	tess.numVertexes = 0;
+}
+
+#include "fnvhash/fnv.h"
+
+const int unique_mesh_growsz = 16;
+typedef uint32_t uniqueMeshHash;
+
+typedef struct uniqueMesh_s
+{
+	uniqueMeshHash hash;
+} uniqueMesh_t;
+
+struct uniqueMeshData_s
+{
+	uniqueMesh_t* meshes;
+	int count;
+	int maxcount;
+} g_unqm = { NULL, 0, 0 };
+
+void RB_SpawnUniqueMesh4Remix(const byte* data, size_t datalen)
+{
+	uniqueMeshHash hash = fnv_32a_buf(data, datalen, 0x5a5a);
+
+	if (g_unqm.count >= g_unqm.maxcount)
+	{
+		void* ptr;
+		if (g_unqm.meshes)
+		{
+			ptr = realloc(g_unqm.meshes, sizeof(uniqueMesh_t) * (g_unqm.maxcount + unique_mesh_growsz));
+		}
+		else
+		{
+			ptr = malloc(sizeof(uniqueMesh_t) * unique_mesh_growsz);
+		}
+
+		if (ptr != NULL)
+		{
+			g_unqm.meshes = ptr;
+			g_unqm.maxcount += unique_mesh_growsz;
+		}
+		else
+		{
+			ri.Printf(PRINT_WARNING, "Failed to add unique mesh\n");
+			return;
+		}
+	}
+
+	if (g_unqm.count < g_unqm.maxcount)
+	{
+		for (int i = 0; i < g_unqm.count; i++)
+		{
+			if (hash == g_unqm.meshes[i].hash)
+			{
+				//found same hash, nothing to do
+				return;
+			}
+		}
+		g_unqm.meshes[g_unqm.count].hash = hash;
+		g_unqm.count++;
+	}
+}
+
+void RB_DrawUniqueMeshes()
+{
+	//if (!r_drawuniquemeshes->integer) {
+	//	return;
+	//}
+
+	if (backEnd.isHyperspace) {
+		return;
+	}
+
+	if (!g_unqm.count) {
+		return;		// none visible
+	}
+
+	// Reset currentEntity to world so that any previously referenced entities
+	// don't have influence on the rendering of these flares (i.e. RF_ renderer flags).
+	backEnd.currentEntity = &tr.worldEntity;
+	backEnd. or = backEnd.viewParms.world;
+
+#ifdef RMX_UNIQUEMESH_FORCE_MODELVIEW
+	qglMatrixMode(GL_MODELVIEW);
+	qglPushMatrix();
+	qglLoadMatrixf(backEnd.viewParms.world.modelMatrix);
+#endif
+	for(int i = 0; i < g_unqm.count; i++)
+	{
+		float size;
+		vec3_t mid;
+		color4ub_t c = { {255, 255, 255, 255} };
+		const float baseSize = 100.0f;
+
+		uniqueMesh_t* mesh = &g_unqm.meshes[i];
+		uint32_t first = mesh->hash & 0xFFFF;
+		uint32_t second = (mesh->hash >> 16) & 0xFFFF;
+		if (first > second)
+		{
+			size = baseSize + (float)second / (float)first;
+		}
+		else
+		{
+			size = baseSize + (float)first / (float)second;
+		}
+
+		VectorClear(mid);
+
+		RB_BeginSurface(tr.quadDamageShader, 0);
+
+		//RB_AddQuadStamp2(mid[0] - size * 0.5f, mid[1] - size * 0.5f, size * 0.5f, size * 0.5f, 0, 0, 1, 1, c);
+		const vec3_t origin = { 0, 0, 0 };
+		const vec3_t left = { 0, size, 0 };
+		const vec3_t up = { 0, 0, size };
+		RB_AddQuadStamp(origin, left, up, c);
+
+		RB_EndSurface();
+	}
+#ifdef RMX_UNIQUEMESH_FORCE_MODELVIEW
+	qglPopMatrix();
+#endif
+
+	g_unqm.count = 0;
 }

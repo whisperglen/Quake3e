@@ -1351,6 +1351,8 @@ static void R_CreateBuiltinImages( void ) {
 
 	R_CreateDlightImage();
 	R_CreateFogImage();
+
+	tr.quadDamageImage = R_FindImageFile("textures/common/rtxQuadDamage.jpg", IMGFLAG_NONE);
 }
 
 

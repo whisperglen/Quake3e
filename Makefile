@@ -130,6 +130,10 @@ ifndef BUILD_DIR
 BUILD_DIR=build
 endif
 
+ifndef EXT_DIR
+EXT_DIR=extern
+endif
+
 ifndef GENERATE_DEPENDENCIES
 GENERATE_DEPENDENCIES=1
 endif
@@ -650,6 +654,8 @@ else
     RENDCFLAGS=$(NOTSHLIBCFLAGS)
 endif
 
+RENDCFLAGS += -I$(EXT_DIR)
+
 define DO_CC
 $(echo_cmd) "CC $<"
 $(Q)$(CC) $(CFLAGS) -o $@ -c $<
@@ -821,7 +827,9 @@ Q3REND1OBJ = \
   $(B)/rend1/tr_sky.o \
   $(B)/rend1/tr_surface.o \
   $(B)/rend1/tr_vbo.o \
-  $(B)/rend1/tr_world.o
+  $(B)/rend1/tr_world.o \
+  $(B)/rend1/hash_32a.o \
+  $(B)/rend1/hash_64a.o
 
 ifneq ($(USE_RENDERER_DLOPEN), 0)
   Q3REND1OBJ += \
@@ -1251,7 +1259,7 @@ $(B)/$(TARGET_CLIENT): $(Q3OBJ)
 
 $(B)/$(TARGET_REND1): $(Q3REND1OBJ)
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) -o $@ $(Q3REND1OBJ) $(SHLIBCFLAGS) $(SHLIBLDFLAGS)
+	$(Q)$(CC) -o $@ $(Q3REND1OBJ) $(SHLIBLDFLAGS) -I$(EXT_DIR)
 
 $(STRINGIFY): $(MOUNT_DIR)/renderer2/stringify.c
 	$(echo_cmd) "LD $@"
@@ -1412,6 +1420,9 @@ $(B)/rend1/%.o: $(RCDIR)/%.c
 	$(DO_REND_CC)
 
 $(B)/rend1/%.o: $(CMDIR)/%.c
+	$(DO_REND_CC)
+
+$(B)/rend1/%.o: $(EXT_DIR)/fnvhash/%.c
 	$(DO_REND_CC)
 
 $(B)/rend2/glsl/%.c: $(R2DIR)/glsl/%.glsl $(STRINGIFY)

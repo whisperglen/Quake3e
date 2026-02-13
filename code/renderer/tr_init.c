@@ -125,6 +125,7 @@ cvar_t	*r_ext_texture_filter_anisotropic;
 cvar_t	*r_ext_max_anisotropy;
 
 cvar_t	*r_ignoreGLErrors;
+cvar_t  *r_logFile;
 
 //cvar_t	*r_stencilbits;
 cvar_t	*r_texturebits;
@@ -670,6 +671,8 @@ static void InitOpenGL( void )
 
 	// set default state
 	GL_SetDefaultState();
+
+	QGL_EnableLogging(r_logFile->integer);
 
 	tr.inited = qtrue;
 }
@@ -1550,6 +1553,8 @@ static void R_Register( void )
 	ri.Cvar_SetDescription( r_stereoSeparation, "Control eye separation. Resulting separation is \\r_zproj divided by this value in standard units." );
 	r_ignoreGLErrors = ri.Cvar_Get( "r_ignoreGLErrors", "1", CVAR_ARCHIVE_ND );
 	ri.Cvar_SetDescription( r_ignoreGLErrors, "Ignore OpenGL errors." );
+	r_logFile = ri.Cvar_Get("r_logFile", "0", CVAR_CHEAT);
+	ri.Cvar_SetDescription(r_logFile, "Creates a file to log all shaders drawn in one or more frames.");
 	r_teleporterFlash = ri.Cvar_Get( "r_teleporterFlash", "1", CVAR_ARCHIVE );
 	ri.Cvar_SetDescription( r_teleporterFlash, "Show a white screen instead of a black screen when being teleported in hyperspace." );
 	r_fastsky = ri.Cvar_Get( "r_fastsky", "0", CVAR_ARCHIVE_ND );
@@ -1937,6 +1942,8 @@ static void RE_Shutdown( refShutdownCode_t code ) {
 		}
 	}
 
+	QGL_EnableLogging(qfalse);
+
 	ri.FreeAll();
 
 	tr.registered = qfalse;
@@ -2034,4 +2041,76 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	re.SyncRender = RE_SyncRender;
 
 	return &re;
+}
+
+static FILE* logFile_fp = NULL;
+
+static void close_logfile(void)
+{
+	if (logFile_fp) {
+		fprintf(logFile_fp, "*** CLOSING LOG ***\n");
+		fclose(logFile_fp);
+		logFile_fp = NULL;
+	}
+}
+
+static void open_logfile(int count)
+{
+	if (!logFile_fp) {
+		struct tm* newtime;
+		time_t aclock;
+		char buffer[1024];
+		cvar_t* basedir;
+
+		time(&aclock);
+		newtime = localtime(&aclock);
+
+		asctime(newtime);
+
+		basedir = ri.Cvar_Get("fs_basepath", "", 0);
+		Com_sprintf(buffer, sizeof(buffer), "%s/gl_%02d.log", basedir->string, count);
+		logFile_fp = fopen(buffer, "wt");
+
+		fprintf(logFile_fp, "%s\n", asctime(newtime));
+	}
+}
+
+void QGL_EnableLogging(qboolean enable) {
+	static qboolean isEnabled;
+	static int counter = 0;
+
+	// return if we're already active
+	if (isEnabled && enable) {
+		// decrement log counter and stop if it has reached 0
+		ri.Cvar_Set("r_logFile", va("%d", r_logFile->integer - 1));
+		if (r_logFile->integer) {
+			close_logfile();
+			counter++;
+			open_logfile(counter);
+			return;
+		}
+		enable = qfalse;
+	}
+
+	// return if we're already disabled
+	if (!enable && !isEnabled) {
+		return;
+	}
+
+	isEnabled = enable;
+
+	if (enable) {
+		open_logfile(counter);
+	}
+	else
+	{
+		close_logfile();
+		counter++;
+	}
+}
+
+void GLimp_LogComment(const char* comment) {
+	if (logFile_fp) {
+		fprintf(logFile_fp, "%s", comment);
+	}
 }

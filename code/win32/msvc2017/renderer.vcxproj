@@ -236,6 +236,8 @@
     <ClCompile Include="..\..\renderer\tr_world.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\extern\fnvhash\fnv.h" />
+    <ClInclude Include="..\..\..\extern\qindiegl\qindie_rmx.h" />
     <ClInclude Include="..\..\qcommon\qcommon.h" />
     <ClInclude Include="..\..\qcommon\qfiles.h" />
     <ClInclude Include="..\..\qcommon\q_shared.h" />

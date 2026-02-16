@@ -23,6 +23,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "tr_local.h"
 
+#define RMX_ADD_IMPL
+#define RMX_GET_PROC_ADDRESS(MOD,NAME) ri.GL_GetProcAddress((NAME))
+#include "qindiegl/qindie_rmx.h"
+
 glconfig_t	glConfig;
 qboolean	nonPowerOfTwoTextures;
 qboolean	textureFilterAnisotropic;
@@ -673,6 +677,8 @@ static void InitOpenGL( void )
 	GL_SetDefaultState();
 
 	QGL_EnableLogging(r_logFile->integer);
+
+	rmx_interface_init(NULL);
 
 	tr.inited = qtrue;
 }

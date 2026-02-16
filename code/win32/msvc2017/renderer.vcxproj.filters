@@ -12,6 +12,9 @@
     <Filter Include="Source Files\extern">
       <UniqueIdentifier>{f89aa515-a878-4300-b795-f55bdf33a563}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\extern">
+      <UniqueIdentifier>{4ad7532e-c0b0-4150-8d75-5ddfcb5bffea}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\renderer\tr_animation.c">
@@ -141,6 +144,12 @@
     </ClInclude>
     <ClInclude Include="..\..\renderercommon\tr_types.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\extern\qindiegl\qindie_rmx.h">
+      <Filter>Header Files\extern</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\extern\fnvhash\fnv.h">
+      <Filter>Header Files\extern</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -1331,6 +1331,10 @@ extern	cvar_t	*r_printShaders;
 
 extern cvar_t	*r_marksOnTriangleMeshes;
 
+extern cvar_t* r_rmx_coronas;
+extern cvar_t* r_rmx_dynamiclight;
+extern cvar_t* r_rmx_flashlight;
+
 //====================================================================
 
 void R_SwapBuffers( int );

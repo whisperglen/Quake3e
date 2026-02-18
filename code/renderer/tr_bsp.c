@@ -22,6 +22,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // tr_map.c
 
 #include "tr_local.h"
+#include "qindiegl/qindie_rmx.h"
 
 /*
 
@@ -2220,6 +2221,8 @@ void RE_LoadWorldMap( const char *name ) {
 	if ( tr.worldMapLoaded ) {
 		ri.Error( ERR_DROP, "ERROR: attempted to redundantly load world map" );
 	}
+
+	rmx_begin_loading_map(name);
 
 	// set default sun direction to be used if it isn't
 	// overridden by a shader

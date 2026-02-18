@@ -21,6 +21,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 #include "tr_local.h"
+#include "qindiegl/qindie_rmx.h"
 
 static int			r_firstSceneDrawSurf;
 #ifdef USE_PMLIGHT
@@ -29,6 +30,7 @@ static int			r_firstSceneLitSurf;
 
 int			r_numdlights;
 static int			r_firstSceneDlight;
+static int          r_rmxdlights;
 
 static int			r_numentities;
 static int			r_firstSceneEntity;
@@ -56,6 +58,7 @@ void R_InitNextFrame( void ) {
 
 	r_numdlights = 0;
 	r_firstSceneDlight = 0;
+	r_rmxdlights = 0;
 
 	r_numentities = 0;
 	r_firstSceneEntity = 0;
@@ -248,6 +251,13 @@ static void RE_AddDynamicLightToScene( const vec3_t org, float intensity, float 
 
 	if ( !tr.registered ) {
 		return;
+	}
+	if (r_rmx_dynamiclight->value)
+	{
+		vec3_t color = { r, g, b };
+		//float radius = intensity * r_dlightScale->value;
+		rmx_light_add(LIGHT_DYNAMIC, r_rmxdlights - r_firstSceneDlight, org, org, color, intensity);
+		r_rmxdlights++;
 	}
 	if ( r_numdlights >= ARRAY_LEN( backEndData->dlights ) ) {
 		return;

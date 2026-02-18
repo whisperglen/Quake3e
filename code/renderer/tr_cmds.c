@@ -20,7 +20,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 */
 #include "tr_local.h"
-
+#include "qindiegl/qindie_rmx.h"
 /*
 =====================
 R_PerformanceCounters
@@ -401,6 +401,30 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 			if ( r_anaglyphMode->integer ) {
 				clrcmd->colorMask = qtrue;
 			}
+		}
+	}
+
+	if (r_rmx_dynamiclight->modified)
+	{
+		r_rmx_dynamiclight->modified = qfalse;
+		rmx_lights_clear(LIGHT_DYNAMIC);
+	}
+	if (r_rmx_coronas->modified)
+	{
+		r_rmx_coronas->modified = qfalse;
+		rmx_lights_clear(LIGHT_CORONA);
+	}
+	if (r_rmx_flashlight->modified)
+	{
+		r_rmx_flashlight->modified = qfalse;
+		if (!r_rmx_flashlight->integer)
+		{   //delete the light
+			rmx_lights_clear(LIGHT_FLASHLIGHT);
+		}
+		if (r_rmx_flashlight->modificationCount > 1)
+		{   //play a switch sound
+			ri.Cmd_ExecuteText(EXEC_APPEND, "play sound/items/use_nothing.wav");
+			//ri.Cmd_ExecuteText( EXEC_APPEND, "play sound/movers/invis_user_off.wav" );
 		}
 	}
 

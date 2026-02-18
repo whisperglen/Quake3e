@@ -27,6 +27,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define RMX_GET_PROC_ADDRESS(MOD,NAME) ri.GL_GetProcAddress((NAME))
 #include "qindiegl/qindie_rmx.h"
 
+static gameparamret_t __cdecl RMX_implement_api(gameops_t op, gameparam_t p0, gameparam_t p1, gameparam_t p2);
+
 glconfig_t	glConfig;
 qboolean	nonPowerOfTwoTextures;
 qboolean	textureFilterAnisotropic;
@@ -193,6 +195,11 @@ static cvar_t *r_maxpolys;
 static cvar_t* r_maxpolyverts;
 int		max_polys;
 int		max_polyverts;
+
+
+cvar_t* r_rmx_coronas;
+cvar_t* r_rmx_dynamiclight;
+cvar_t* r_rmx_flashlight;
 
 static char gl_extensions[ 32768 ];
 
@@ -1751,6 +1758,11 @@ static void R_Register( void )
 	r_screenshotJpegQuality = ri.Cvar_Get( "r_screenshotJpegQuality", "90", CVAR_ARCHIVE_ND );
 	ri.Cvar_SetDescription( r_screenshotJpegQuality, "Controls quality of Jpeg screenshots when using screenshotJpeg." );
 
+
+	r_rmx_coronas = ri.Cvar_Get("r_rmx_coronas", "0", CVAR_ARCHIVE_ND);
+	r_rmx_dynamiclight = ri.Cvar_Get("r_rmx_dynamiclight", "0", CVAR_ARCHIVE_ND);
+	r_rmx_flashlight = ri.Cvar_Get("r_rmx_flashlight", "0", CVAR_TEMP);
+
 	if ( glConfig.vidWidth )
 		return;
 
@@ -1894,6 +1906,8 @@ void R_Init( void ) {
 	R_ModelInit();
 
 	R_InitFreeType();
+
+	rmx_set_game_api(RMX_implement_api);
 
 	err = qglGetError();
 	if ( err != GL_NO_ERROR )
@@ -2119,4 +2133,40 @@ void GLimp_LogComment(const char* comment) {
 	if (logFile_fp) {
 		fprintf(logFile_fp, "%s", comment);
 	}
+}
+
+static gameparamret_t __cdecl RMX_implement_api(gameops_t op, gameparam_t p0, gameparam_t p1, gameparam_t p2)
+{
+	gameparamret_t ret = { 0 };
+
+	switch (op)
+	{
+	case OP_GETVAR: {
+		cvar_t* cv = ri.Cvar_Get(p0.strval, "0", 0);
+		ret.intval = cv->integer;
+		break;
+	}
+	case OP_SETVAR:
+		ri.Cvar_Set(p0.strval, p1.strval);
+		break;
+	case OP_EXECMD:
+		ri.Cmd_ExecuteText(EXEC_APPEND, p0.strval);
+		break;
+	case OP_CONPRINT: {
+		ri.Printf(PRINT_ALL, "%s", p1.strval);
+		break;
+	}
+	case OP_DEACTMOUSE:{
+		extern void	IN_Activate(qboolean active);
+		IN_Activate(qfalse);
+		break;}
+	case OP_GETNORMALSTHRESHVAL:
+		ret.pfltval = 0;
+		break;
+	default:
+		ri.Printf(PRINT_ALL, "Unsupported OP:%d\n", op);
+		break;
+	}
+
+	return ret;
 }

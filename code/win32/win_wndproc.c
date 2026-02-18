@@ -33,7 +33,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // Console variables that we need to access from this module
 cvar_t		*in_forceCharset;
 
-static HHOOK WinHook;
+static HHOOK WinHook = 0;
 
 /*
 ==================
@@ -93,10 +93,10 @@ Capture PrintScreen and Win* keys
 */
 void WIN_EnableHook( void  ) 
 {
-	if ( !WinHook )
-	{
-		WinHook = SetWindowsHookEx( WH_KEYBOARD_LL, WinKeyHook, g_wv.hInstance, 0 );
-	}
+	//if ( !WinHook )
+	//{
+	//	WinHook = SetWindowsHookEx( WH_KEYBOARD_LL, WinKeyHook, g_wv.hInstance, 0 );
+	//}
 }
 
 

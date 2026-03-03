@@ -121,9 +121,9 @@ jobs:
       if: ${{ github.event_name != 'release' || matrix.btype != 'Debug' }} # skip Debug configuration in Release build
       shell: cmd
       run: |
-        make ${{ matrix.rule }} ARCH=${{ matrix.arch }} DESTDIR=bin USE_SDL=0 USE_RENDERER_DLOPEN=0 RENDERER_DEFAULT=vulkan CNAME=quake3e-vulkan BUILD_SERVER=0
-        make clean ARCH=${{ matrix.arch }}
-        make ${{ matrix.rule }} ARCH=${{ matrix.arch }} DESTDIR=bin USE_SDL=0 USE_RENDERER_DLOPEN=0 RENDERER_DEFAULT=opengl
+        make -j 4 ${{ matrix.rule }} ARCH=${{ matrix.arch }} DESTDIR=bin USE_SDL=0 USE_RENDERER_DLOPEN=0 RENDERER_DEFAULT=opengl
+#       make clean ARCH=${{ matrix.arch }}
+#       make -j 4 ${{ matrix.rule }} ARCH=${{ matrix.arch }} DESTDIR=bin USE_SDL=0 USE_RENDERER_DLOPEN=0 RENDERER_DEFAULT=vulkan CNAME=quake3e-vulkan BUILD_SERVER=0
 
     - uses: actions/upload-artifact@v4
       if: matrix.btype == 'Release'
@@ -421,7 +421,7 @@ jobs:
             *.zip
 
   update-release:
-    if: ${{ github.event_name == 'release' }}
+    if: ${{ (github.event_name == 'release') || ((github.event_name == 'push') && startsWith(github.ref_name, 'v')) }}
     #needs: [windows-msys32, windows-msvc, ubuntu-x86, ubuntu-arm, macos-x86]
     needs: [windows-msys32, windows-msvc]
     runs-on: ubuntu-latest
@@ -479,3 +479,4 @@ jobs:
           tag: ${{ github.ref }}
           overwrite: true
           file: ${{ matrix.artifact_name }}
+

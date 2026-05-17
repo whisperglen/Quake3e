@@ -272,7 +272,7 @@ typedef struct {
 		// used for TMOD_TRANSFORM
 		struct {
 			float		matrix[2][2];	// s' = s * m[0][0] + t * m[1][0] + trans[0]
-			float		translate[2];	// t' = s * m[0][1] + t * m[0][1] + trans[1]
+			float		translate[2];	// t' = s * m[0][1] + t * m[1][1] + trans[1]
 		};
 
 		// used for TMOD_SCALE, TMOD_OFFSET, TMOD_SCALE_OFFSET
@@ -1335,6 +1335,11 @@ extern cvar_t* r_rmx_coronas;
 extern cvar_t* r_rmx_dynamiclight;
 extern cvar_t* r_rmx_flashlight;
 
+extern cvar_t* r_environmentMapping;
+extern cvar_t* r_turbulentTextures;
+extern cvar_t* r_novertex_colors;
+extern cvar_t* r_gpu_uv_transform;
+
 //====================================================================
 
 void R_SwapBuffers( int );
@@ -1565,6 +1570,7 @@ void RB_AddQuadStamp2( float x, float y, float w, float h, float s1, float t1, f
 
 void RB_ShowImages( void );
 
+void RB_MultiplyTextureMatrix(float* mat);
 
 /*
 ============================================================
@@ -1761,11 +1767,11 @@ void	RB_CalcEnvironmentTexCoords( float *dstTexCoords );
 void	RB_CalcEnvironmentTexCoordsFP( float *dstTexCoords, qboolean screenMap );
 void	RB_CalcFogTexCoords( float *dstTexCoords );
 const fogProgramParms_t *RB_CalcFogProgramParms( void );
-void	RB_CalcScrollTexCoords( const float scroll[2], float *srcTexCoords, float *dstTexCoords );
-void	RB_CalcRotateTexCoords( float rotSpeed, float *srcTexCoords, float *dstTexCoords );
-void	RB_CalcScaleTexCoords( const float scale[2], float *srcTexCoords, float *dstTexCoords );
-void	RB_CalcTurbulentTexCoords( const waveForm_t *wf, float *srcTexCoords, float *dstTexCoords );
-void	RB_CalcTransformTexCoords( const texModInfo_t *tmi, float *srcTexCoords, float *dstTexCoords );
+float*	RB_CalcScrollTexCoords( const float scroll[2], float *srcTexCoords, float *dstTexCoords );
+float*	RB_CalcRotateTexCoords( float rotSpeed, float *srcTexCoords, float *dstTexCoords );
+float*	RB_CalcScaleTexCoords( const float scale[2], float *srcTexCoords, float *dstTexCoords );
+float*	RB_CalcTurbulentTexCoords( const waveForm_t *wf, float *srcTexCoords, float *dstTexCoords );
+float*	RB_CalcTransformTexCoords( const texModInfo_t *tmi, float *srcTexCoords, float *dstTexCoords );
 void	RB_CalcModulateColorsByFog( unsigned char *dstColors );
 void	RB_CalcModulateAlphasByFog( unsigned char *dstColors );
 void	RB_CalcModulateRGBAsByFog( unsigned char *dstColors );
@@ -1773,7 +1779,7 @@ void	RB_CalcWaveAlpha( const waveForm_t *wf, unsigned char *dstColors );
 void	RB_CalcWaveColor( const waveForm_t *wf, unsigned char *dstColors );
 void	RB_CalcAlphaFromEntity( unsigned char *dstColors );
 void	RB_CalcAlphaFromOneMinusEntity( unsigned char *dstColors );
-void	RB_CalcStretchTexCoords( const waveForm_t *wf, float *srcTexCoords, float *dstTexCoords );
+float*	RB_CalcStretchTexCoords( const waveForm_t *wf, float *srcTexCoords, float *dstTexCoords );
 void	RB_CalcColorFromEntity( unsigned char *dstColors );
 void	RB_CalcColorFromOneMinusEntity( unsigned char *dstColors );
 void	RB_CalcSpecularAlpha( unsigned char *alphas );

@@ -84,7 +84,7 @@ static float EvalWaveFormClamped( const waveForm_t *wf )
 /*
 ** RB_CalcStretchTexCoords
 */
-void RB_CalcStretchTexCoords( const waveForm_t *wf, float *src, float *dst )
+float* RB_CalcStretchTexCoords( const waveForm_t *wf, float *src, float *dst )
 {
 	float p;
 	texModInfo_t tmi;
@@ -99,7 +99,7 @@ void RB_CalcStretchTexCoords( const waveForm_t *wf, float *src, float *dst )
 	tmi.matrix[1][1] = p;
 	tmi.translate[1] = 0.5f - 0.5f * p;
 
-	RB_CalcTransformTexCoords( &tmi, src, dst );
+	return RB_CalcTransformTexCoords( &tmi, src, dst );
 }
 
 
@@ -1061,8 +1061,9 @@ void RB_CalcEnvironmentTexCoords( float *st )
 /*
 ** RB_CalcTurbulentTexCoords
 */
-void RB_CalcTurbulentTexCoords( const waveForm_t *wf, float *src, float *dst )
+float* RB_CalcTurbulentTexCoords( const waveForm_t *wf, float *src, float *dst )
 {
+	float* ret = dst;
 	int i;
 	double now; // -EC- set to double
 
@@ -1073,29 +1074,49 @@ void RB_CalcTurbulentTexCoords( const waveForm_t *wf, float *src, float *dst )
 		dst[0] = src[0] + tr.sinTable[ ( ( int64_t ) ( ( ( tess.xyz[i][0] + tess.xyz[i][2] )* 1.0/128 * 0.125 + now ) * FUNCTABLE_SIZE ) ) & ( FUNCTABLE_MASK ) ] * wf->amplitude;
 		dst[1] = src[1] + tr.sinTable[ ( ( int64_t ) ( ( tess.xyz[i][1] * 1.0/128 * 0.125 + now ) * FUNCTABLE_SIZE ) ) & ( FUNCTABLE_MASK ) ] * wf->amplitude;
 	}
+
+	return ret;
 }
 
 
 /*
 ** RB_CalcScaleTexCoords
 */
-void RB_CalcScaleTexCoords( const float scale[2], float *src, float *dst )
+float* RB_CalcScaleTexCoords( const float scale[2], float *src, float *dst )
 {
-	int i;
+	float* ret = r_gpu_uv_transform->integer ? src : dst;
 
-	for ( i = 0; i < tess.numVertexes; i++, dst += 2, src += 2 )
+	if (!r_gpu_uv_transform->integer)
 	{
-		dst[0] = src[0] * scale[0];
-		dst[1] = src[1] * scale[1];
+		int i;
+
+		for ( i = 0; i < tess.numVertexes; i++, dst += 2, src += 2 )
+		{
+			dst[0] = src[0] * scale[0];
+			dst[1] = src[1] * scale[1];
+		}
 	}
+	else
+	{
+		float matScale[16] = {
+			scale[0], 0.0f,     0.0f, 0.0f,
+			0.0f,     scale[1], 0.0f, 0.0f,
+			0.0f,     0.0f,     1.0f, 0.0f,
+			0.0f,     0.0f,     0.0f, 1.0f
+		};
+		RB_MultiplyTextureMatrix(matScale);
+	}
+
+	return ret;
 }
 
 
 /*
 ** RB_CalcScrollTexCoords
 */
-void RB_CalcScrollTexCoords( const float scrollSpeed[2], float *src, float *dst )
+float* RB_CalcScrollTexCoords( const float scrollSpeed[2], float *src, float *dst )
 {
+	float* ret = r_gpu_uv_transform->integer ? src : dst;
 	int i;
 	double	timeScale; // -EC-: set to double
 	double	adjustedScrollS, adjustedScrollT; // -EC-: set to double
@@ -1110,36 +1131,70 @@ void RB_CalcScrollTexCoords( const float scrollSpeed[2], float *src, float *dst 
 	adjustedScrollS = adjustedScrollS - floor( adjustedScrollS );
 	adjustedScrollT = adjustedScrollT - floor( adjustedScrollT );
 
-	for ( i = 0; i < tess.numVertexes; i++, dst += 2, src += 2 )
+	if (!r_gpu_uv_transform->integer)
 	{
-		dst[0] = src[0] + adjustedScrollS;
-		dst[1] = src[1] + adjustedScrollT;
+		for ( i = 0; i < tess.numVertexes; i++, dst += 2, src += 2 )
+		{
+			dst[0] = src[0] + adjustedScrollS;
+			dst[1] = src[1] + adjustedScrollT;
+		}
 	}
+	else
+	{
+		float ds = adjustedScrollS;
+		float dt = adjustedScrollT;
+		float matScroll[16] = {
+			1.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 1.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 1.0f, 0.0f,
+			ds,   dt,   0.0f, 1.0f
+		};
+		RB_MultiplyTextureMatrix(matScroll);
+	}
+
+	return ret;
 }
 
 
 /*
 ** RB_CalcTransformTexCoords
 */
-void RB_CalcTransformTexCoords( const texModInfo_t *tmi, float *src, float *dst )
+float* RB_CalcTransformTexCoords( const texModInfo_t *tmi, float *src, float *dst )
 {
-	int i;
+	float* ret = r_gpu_uv_transform->integer ? src : dst;
 
-	for ( i = 0; i < tess.numVertexes; i++, dst += 2, src += 2 )
+	if (!r_gpu_uv_transform->integer)
 	{
-		const float s = src[0];
-		const float t = src[1];
+		int i;
 
-		dst[0] = s * tmi->matrix[0][0] + t * tmi->matrix[1][0] + tmi->translate[0];
-		dst[1] = s * tmi->matrix[0][1] + t * tmi->matrix[1][1] + tmi->translate[1];
+		for ( i = 0; i < tess.numVertexes; i++, dst += 2, src += 2 )
+		{
+			const float s = src[0];
+			const float t = src[1];
+
+			dst[0] = s * tmi->matrix[0][0] + t * tmi->matrix[1][0] + tmi->translate[0];
+			dst[1] = s * tmi->matrix[0][1] + t * tmi->matrix[1][1] + tmi->translate[1];
+		}
 	}
+	else
+	{
+		float matTransform[16] = {
+			tmi->matrix[0][0], tmi->matrix[0][1], 0.0f, 0.0f,
+			tmi->matrix[1][0], tmi->matrix[1][1], 0.0f, 0.0f,
+			0.0f,              0.0f,              1.0f, 0.0f,
+			tmi->translate[0], tmi->translate[1], 0.0f, 1.0f
+		};
+		RB_MultiplyTextureMatrix(matTransform);
+	}
+
+	return ret;
 }
 
 
 /*
 ** RB_CalcRotateTexCoords
 */
-void RB_CalcRotateTexCoords( float degsPerSecond, float *src, float *dst )
+float* RB_CalcRotateTexCoords( float degsPerSecond, float *src, float *dst )
 {
 	double timeScale = tess.shaderTime; // -EC- set to double
 	double degs; // -EC- set to double
@@ -1161,7 +1216,7 @@ void RB_CalcRotateTexCoords( float degsPerSecond, float *src, float *dst )
 	tmi.matrix[1][1] = cosValue;
 	tmi.translate[1] = 0.5 - 0.5 * sinValue - 0.5 * cosValue;
 
-	RB_CalcTransformTexCoords( &tmi, src, dst );
+	return RB_CalcTransformTexCoords( &tmi, src, dst );
 }
 
 

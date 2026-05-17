@@ -200,6 +200,10 @@ int		max_polyverts;
 cvar_t* r_rmx_coronas;
 cvar_t* r_rmx_dynamiclight;
 cvar_t* r_rmx_flashlight;
+cvar_t* r_environmentMapping;
+cvar_t* r_turbulentTextures;
+cvar_t* r_novertex_colors;
+cvar_t* r_gpu_uv_transform;
 
 static char gl_extensions[ 32768 ];
 
@@ -1762,6 +1766,11 @@ static void R_Register( void )
 	r_rmx_coronas = ri.Cvar_Get("r_rmx_coronas", "0", CVAR_ARCHIVE_ND);
 	r_rmx_dynamiclight = ri.Cvar_Get("r_rmx_dynamiclight", "0", CVAR_ARCHIVE_ND);
 	r_rmx_flashlight = ri.Cvar_Get("r_rmx_flashlight", "0", CVAR_TEMP);
+
+	r_environmentMapping = ri.Cvar_Get("r_environmentMapping", "1", CVAR_ARCHIVE);
+	r_turbulentTextures = ri.Cvar_Get("r_turbulentTextures", "1", CVAR_ARCHIVE);
+	r_novertex_colors = ri.Cvar_Get("r_novertex_colors", "0", CVAR_ARCHIVE);
+	r_gpu_uv_transform = ri.Cvar_Get("r_gpu_uv_transform", "0", CVAR_ARCHIVE);
 
 	if ( glConfig.vidWidth )
 		return;

@@ -2627,7 +2627,7 @@ pass, trying to guess which is the correct one to best approximate
 what it is supposed to look like.
 =================
 */
-static void VertexLightingCollapse( void ) {
+static int VertexLightingCollapse( void ) {
 	int		stage;
 	shaderStage_t	*bestStage;
 	int		bestImageRank;
@@ -2716,6 +2716,66 @@ static void VertexLightingCollapse( void ) {
 
 		Com_Memset( pStage, 0, sizeof( *pStage ) );
 	}
+
+	return 1;
+}
+
+static int VertexLightingRemoveLightmaps(void) {
+	int stage, nextopenstage;
+	int finalstagenum = 0;
+
+	// Loop through all stages to filter out lightmaps and fix vertex coloring
+	for (stage = 0, nextopenstage = 0; stage < MAX_SHADER_STAGES; stage++) {
+		shaderStage_t* pStage = &stages[stage];
+
+		if (!pStage->active) {
+			break;
+		}
+
+		// 1. If it's a lightmap, skip it entirely (this removes the lightmap)
+		if (pStage->bundle[0].lightmap != LIGHTMAP_INDEX_NONE || pStage->bundle[0].tcGen == TCGEN_LIGHTMAP) {
+			continue;
+		}
+
+		// 2. If it's NOT a lightmap, copy it to the next available open slot.
+		// This naturally preserves terrain blending stages and Surface Sprites.
+		if (nextopenstage != stage) {
+			stages[nextopenstage] = *pStage;
+		}
+
+		// 3. Force the foundational stage of opaque surfaces to actually be opaque.
+		// Without this, diffuse maps that were originally blending ONTO a lightmap 
+		// will try to blend with the void, causing transparent walls.
+		if (shader.sort == SS_OPAQUE && nextopenstage == 0) {
+			stages[0].stateBits &= ~(GLS_DSTBLEND_BITS | GLS_SRCBLEND_BITS);
+			stages[0].stateBits |= GLS_DEPTHMASK_TRUE;
+			stages[0].alphaGen = AGEN_SKIP;
+		}
+
+		// 4. Fix the color generation (rgbGen).
+		// Since we removed the lightmap, the diffuse textures will be fullbright 
+		// if left at CGEN_IDENTITY. We need them to catch the CPU vertex lighting.
+		if (shader.sort == SS_OPAQUE) {
+			if (stages[nextopenstage].rgbGen == CGEN_IDENTITY || stages[nextopenstage].rgbGen == CGEN_IDENTITY_LIGHTING || stages[nextopenstage].rgbGen == CGEN_LIGHTING_DIFFUSE) {
+				if (shader.lightmapIndex == LIGHTMAP_NONE) {
+					stages[nextopenstage].rgbGen = CGEN_LIGHTING_DIFFUSE;
+				}
+				else {
+					stages[nextopenstage].rgbGen = CGEN_EXACT_VERTEX;
+				}
+			}
+		}
+
+		nextopenstage++;
+		finalstagenum++;
+	}
+
+	// 5. Clean up any leftover garbage stages at the end of the array
+	for (stage = finalstagenum; stage < MAX_SHADER_STAGES; stage++) {
+		memset(&stages[stage], 0, sizeof(stages[stage]));
+	}
+
+	return finalstagenum;
 }
 
 
@@ -2980,8 +3040,9 @@ static shader_t *FinishShader( void ) {
 	// if we are in r_vertexLight mode, never use a lightmap texture
 	//
 	if ( stage > 1 && ( ( r_vertexLight->integer && tr.vertexLightingAllowed && !shader.noVLcollapse ) || glConfig.hardwareType == GLHW_PERMEDIA2 ) ) {
-		VertexLightingCollapse();
-		stage = 1;
+		stage = (r_vertexLight->integer == 1) ?
+			VertexLightingCollapse() :
+			VertexLightingRemoveLightmaps();
 		hasLightmapStage = qfalse;
 	}
 

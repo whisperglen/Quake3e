@@ -514,85 +514,95 @@ void R_ComputeColors( const shaderStage_t *pStage )
 	if ( tess.numVertexes == 0 )
 		return;
 
+	qboolean colorskip = !backEnd.projection2D && r_novertex_colors->integer;
+
 	//
 	// rgbGen
 	//
-	switch ( pStage->rgbGen )
+
+	if (colorskip)
 	{
-		case CGEN_IDENTITY:
-			Com_Memset( tess.svars.colors, 0xff, tess.numVertexes * 4 );
-			break;
-		default:
-		case CGEN_IDENTITY_LIGHTING:
-			Com_Memset( tess.svars.colors, tr.identityLightByte, tess.numVertexes * 4 );
-			break;
-		case CGEN_LIGHTING_DIFFUSE:
-			RB_CalcDiffuseColor( ( unsigned char * ) tess.svars.colors );
-			break;
-		case CGEN_EXACT_VERTEX:
-			Com_Memcpy( tess.svars.colors, tess.vertexColors, tess.numVertexes * sizeof( tess.vertexColors[0] ) );
-			break;
-		case CGEN_CONST:
-			for ( i = 0; i < tess.numVertexes; i++ ) {
-				tess.svars.colors[i] = pStage->constantColor;
-			}
-			break;
-		case CGEN_VERTEX:
-			if ( tr.identityLight == 1 )
-			{
+		Com_Memset(tess.svars.colors, 0xff, tess.numVertexes * 4);
+	}
+	else
+	{
+		switch ( pStage->rgbGen )
+		{
+			case CGEN_IDENTITY:
+				Com_Memset( tess.svars.colors, 0xff, tess.numVertexes * 4 );
+				break;
+			default:
+			case CGEN_IDENTITY_LIGHTING:
+				Com_Memset( tess.svars.colors, tr.identityLightByte, tess.numVertexes * 4 );
+				break;
+			case CGEN_LIGHTING_DIFFUSE:
+				RB_CalcDiffuseColor( ( unsigned char * ) tess.svars.colors );
+				break;
+			case CGEN_EXACT_VERTEX:
 				Com_Memcpy( tess.svars.colors, tess.vertexColors, tess.numVertexes * sizeof( tess.vertexColors[0] ) );
-			}
-			else
-			{
-				for ( i = 0; i < tess.numVertexes; i++ )
-				{
-					tess.svars.colors[i].rgba[0] = tess.vertexColors[i].rgba[0] * tr.identityLight;
-					tess.svars.colors[i].rgba[1] = tess.vertexColors[i].rgba[1] * tr.identityLight;
-					tess.svars.colors[i].rgba[2] = tess.vertexColors[i].rgba[2] * tr.identityLight;
-					tess.svars.colors[i].rgba[3] = tess.vertexColors[i].rgba[3];
-				}
-			}
-			break;
-		case CGEN_ONE_MINUS_VERTEX:
-			if ( tr.identityLight == 1 )
-			{
-				for ( i = 0; i < tess.numVertexes; i++ )
-				{
-					tess.svars.colors[i].rgba[0] = 255 - tess.vertexColors[i].rgba[0];
-					tess.svars.colors[i].rgba[1] = 255 - tess.vertexColors[i].rgba[1];
-					tess.svars.colors[i].rgba[2] = 255 - tess.vertexColors[i].rgba[2];
-				}
-			}
-			else
-			{
-				for ( i = 0; i < tess.numVertexes; i++ )
-				{
-					tess.svars.colors[i].rgba[0] = ( 255 - tess.vertexColors[i].rgba[0] ) * tr.identityLight;
-					tess.svars.colors[i].rgba[1] = ( 255 - tess.vertexColors[i].rgba[1] ) * tr.identityLight;
-					tess.svars.colors[i].rgba[2] = ( 255 - tess.vertexColors[i].rgba[2] ) * tr.identityLight;
-				}
-			}
-			break;
-		case CGEN_FOG:
-			{
-				const fog_t *fog;
-
-				fog = tr.world->fogs + tess.fogNum;
-
+				break;
+			case CGEN_CONST:
 				for ( i = 0; i < tess.numVertexes; i++ ) {
-					tess.svars.colors[i] = fog->colorInt;
+					tess.svars.colors[i] = pStage->constantColor;
 				}
-			}
-			break;
-		case CGEN_WAVEFORM:
-			RB_CalcWaveColor( &pStage->rgbWave, tess.svars.colors[0].rgba );
-			break;
-		case CGEN_ENTITY:
-			RB_CalcColorFromEntity( tess.svars.colors[0].rgba );
-			break;
-		case CGEN_ONE_MINUS_ENTITY:
-			RB_CalcColorFromOneMinusEntity( tess.svars.colors[0].rgba );
-			break;
+				break;
+			case CGEN_VERTEX:
+				if ( tr.identityLight == 1 )
+				{
+					Com_Memcpy( tess.svars.colors, tess.vertexColors, tess.numVertexes * sizeof( tess.vertexColors[0] ) );
+				}
+				else
+				{
+					for ( i = 0; i < tess.numVertexes; i++ )
+					{
+						tess.svars.colors[i].rgba[0] = tess.vertexColors[i].rgba[0] * tr.identityLight;
+						tess.svars.colors[i].rgba[1] = tess.vertexColors[i].rgba[1] * tr.identityLight;
+						tess.svars.colors[i].rgba[2] = tess.vertexColors[i].rgba[2] * tr.identityLight;
+						tess.svars.colors[i].rgba[3] = tess.vertexColors[i].rgba[3];
+					}
+				}
+				break;
+			case CGEN_ONE_MINUS_VERTEX:
+				if ( tr.identityLight == 1 )
+				{
+					for ( i = 0; i < tess.numVertexes; i++ )
+					{
+						tess.svars.colors[i].rgba[0] = 255 - tess.vertexColors[i].rgba[0];
+						tess.svars.colors[i].rgba[1] = 255 - tess.vertexColors[i].rgba[1];
+						tess.svars.colors[i].rgba[2] = 255 - tess.vertexColors[i].rgba[2];
+					}
+				}
+				else
+				{
+					for ( i = 0; i < tess.numVertexes; i++ )
+					{
+						tess.svars.colors[i].rgba[0] = ( 255 - tess.vertexColors[i].rgba[0] ) * tr.identityLight;
+						tess.svars.colors[i].rgba[1] = ( 255 - tess.vertexColors[i].rgba[1] ) * tr.identityLight;
+						tess.svars.colors[i].rgba[2] = ( 255 - tess.vertexColors[i].rgba[2] ) * tr.identityLight;
+					}
+				}
+				break;
+			case CGEN_FOG:
+				{
+					const fog_t *fog;
+
+					fog = tr.world->fogs + tess.fogNum;
+
+					for ( i = 0; i < tess.numVertexes; i++ ) {
+						tess.svars.colors[i] = fog->colorInt;
+					}
+				}
+				break;
+			case CGEN_WAVEFORM:
+				RB_CalcWaveColor( &pStage->rgbWave, tess.svars.colors[0].rgba );
+				break;
+			case CGEN_ENTITY:
+				RB_CalcColorFromEntity( tess.svars.colors[0].rgba );
+				break;
+			case CGEN_ONE_MINUS_ENTITY:
+				RB_CalcColorFromOneMinusEntity( tess.svars.colors[0].rgba );
+				break;
+		}
 	}
 
 	//
@@ -667,25 +677,96 @@ void R_ComputeColors( const shaderStage_t *pStage )
 	//
 	// fog adjustment for colors to fade out as fog increases
 	//
-	if ( tess.fogNum )
+	if (!colorskip)
 	{
-		switch ( pStage->adjustColorsForFog )
+		if ( tess.fogNum )
 		{
-		case ACFF_MODULATE_RGB:
-			RB_CalcModulateColorsByFog( tess.svars.colors[0].rgba );
-			break;
-		case ACFF_MODULATE_ALPHA:
-			RB_CalcModulateAlphasByFog( tess.svars.colors[0].rgba );
-			break;
-		case ACFF_MODULATE_RGBA:
-			RB_CalcModulateRGBAsByFog( tess.svars.colors[0].rgba );
-			break;
-		case ACFF_NONE:
-			break;
+			switch ( pStage->adjustColorsForFog )
+			{
+			case ACFF_MODULATE_RGB:
+				RB_CalcModulateColorsByFog( tess.svars.colors[0].rgba );
+				break;
+			case ACFF_MODULATE_ALPHA:
+				RB_CalcModulateAlphasByFog( tess.svars.colors[0].rgba );
+				break;
+			case ACFF_MODULATE_RGBA:
+				RB_CalcModulateRGBAsByFog( tess.svars.colors[0].rgba );
+				break;
+			case ACFF_NONE:
+				break;
+			}
 		}
 	}
 }
 
+static void ComputeTexCoords_ClearTransforms()
+{
+	if (r_gpu_uv_transform->integer)
+	{
+		GLint matrixMode = 0;
+		GLint activeTexture = -1;
+		qglGetIntegerv(GL_MATRIX_MODE, &matrixMode);
+		qglGetIntegerv(GL_ACTIVE_TEXTURE, &activeTexture);
+
+		qglMatrixMode(GL_TEXTURE);
+
+		for (int i = 0; i < NUM_TEXTURE_BUNDLES; i++)
+		{
+			if (qglActiveTextureARB)
+				qglActiveTextureARB(GL_TEXTURE0_ARB + i);
+			qglLoadIdentity();
+		}
+
+		qglMatrixMode(matrixMode);
+		if (qglActiveTextureARB)
+			qglActiveTextureARB(activeTexture);
+	}
+}
+
+static float g_texcoords_mats[NUM_TEXTURE_BUNDLES][16];
+static int g_texcoords_index = 0;
+
+void RB_MultiplyTextureMatrix(float* mat)
+{
+	// r_gpu_uv_transform 2 helps with debugging
+	if (r_gpu_uv_transform->integer < 2)
+	{
+		float* dest = g_texcoords_mats[g_texcoords_index];
+		const float* A = mat;
+		float B[16];
+
+		memcpy(B, dest, sizeof(B));
+
+		int i, j;
+		for (i = 0; i < 4; i++)
+		{
+			for (j = 0; j < 4; j++)
+			{
+				dest[i * 4 + j] =
+					A[0 * 4 + j] * B[i * 4 + 0] +
+					A[1 * 4 + j] * B[i * 4 + 1] +
+					A[2 * 4 + j] * B[i * 4 + 2] +
+					A[3 * 4 + j] * B[i * 4 + 3];
+			}
+		}
+	}
+}
+
+/*
+================
+MatrixIdentity4x4
+
+Clears a 16-element column-major matrix to the Identity matrix.
+================
+*/
+static void RB_TextureMatrixClear()
+{
+	float* m = g_texcoords_mats[g_texcoords_index];
+	m[0] = 1.0f; m[4] = 0.0f; m[8] = 0.0f; m[12] = 0.0f;
+	m[1] = 0.0f; m[5] = 1.0f; m[9] = 0.0f; m[13] = 0.0f;
+	m[2] = 0.0f; m[6] = 0.0f; m[10] = 1.0f; m[14] = 0.0f;
+	m[3] = 0.0f; m[7] = 0.0f; m[11] = 0.0f; m[15] = 1.0f;
+}
 
 /*
 ===============
@@ -699,6 +780,12 @@ void R_ComputeTexCoords( const int b, const textureBundle_t *bundle ) {
 
 	if ( !tess.numVertexes )
 		return;
+	
+	if (r_gpu_uv_transform->integer)
+	{
+		g_texcoords_index = b;
+		RB_TextureMatrixClear();
+	}
 
 	src = dst = tess.svars.texcoords[b];
 
@@ -726,13 +813,19 @@ void R_ComputeTexCoords( const int b, const textureBundle_t *bundle ) {
 		RB_CalcFogTexCoords( ( float * ) dst );
 		break;
 	case TCGEN_ENVIRONMENT_MAPPED:
-		RB_CalcEnvironmentTexCoords( ( float * ) dst );
+		if (r_environmentMapping->integer)
+			RB_CalcEnvironmentTexCoords( ( float * ) dst );
+		else
+			src = tess.texCoords[0];
 		break;
 	case TCGEN_ENVIRONMENT_MAPPED_FP:
-		RB_CalcEnvironmentTexCoordsFP( ( float * ) dst, bundle->isScreenMap );
+		if (r_environmentMapping->integer)
+			RB_CalcEnvironmentTexCoordsFP( ( float * ) dst, bundle->isScreenMap );
+		else
+			src = tess.texCoords[0];
 		break;
 	case TCGEN_BAD:
-		return;
+		goto compute_tex_end;
 	}
 
 	//
@@ -746,62 +839,95 @@ void R_ComputeTexCoords( const int b, const textureBundle_t *bundle ) {
 			break;
 
 		case TMOD_TURBULENT:
-			RB_CalcTurbulentTexCoords( &bundle->texMods[tm].wave, (float *)src, (float *) dst );
-			src = dst;
+			if (r_turbulentTextures->integer)
+				src = RB_CalcTurbulentTexCoords( &bundle->texMods[tm].wave, (float *)src, (float *) dst );
 			break;
 
 		case TMOD_ENTITY_TRANSLATE:
-			RB_CalcScrollTexCoords( backEnd.currentEntity->e.shaderTexCoord, (float *)src, (float *) dst );
-			src = dst;
+			src = RB_CalcScrollTexCoords( backEnd.currentEntity->e.shaderTexCoord, (float *)src, (float *) dst );
 			break;
 
 		case TMOD_SCROLL:
-			RB_CalcScrollTexCoords( bundle->texMods[tm].scroll, (float *)src, (float *) dst );
-			src = dst;
+			src = RB_CalcScrollTexCoords( bundle->texMods[tm].scroll, (float *)src, (float *) dst );
 			break;
 
 		case TMOD_SCALE:
-			RB_CalcScaleTexCoords( bundle->texMods[tm].scale, (float *) src, (float *) dst );
-			src = dst;
+			src = RB_CalcScaleTexCoords( bundle->texMods[tm].scale, (float *) src, (float *) dst );
 			break;
 
 		case TMOD_OFFSET:
-			for ( i = 0; i < tess.numVertexes; i++ ) {
-				dst[i][0] = src[i][0] + bundle->texMods[tm].offset[0];
-				dst[i][1] = src[i][1] + bundle->texMods[tm].offset[1];
+			if (!r_gpu_uv_transform->integer)
+			{
+				for ( i = 0; i < tess.numVertexes; i++ ) {
+					dst[i][0] = src[i][0] + bundle->texMods[tm].offset[0];
+					dst[i][1] = src[i][1] + bundle->texMods[tm].offset[1];
+				}
+				src = dst;
 			}
-			src = dst;
+			else
+			{
+				bundle->texMods[tm].matrix[0][0] = 1;
+				bundle->texMods[tm].matrix[0][1] = 0;
+				bundle->texMods[tm].matrix[1][0] = 0;
+				bundle->texMods[tm].matrix[1][1] = 1;
+				bundle->texMods[tm].translate[0] = bundle->texMods[tm].offset[0];
+				bundle->texMods[tm].translate[1] = bundle->texMods[tm].offset[1];
+				RB_CalcTransformTexCoords(&bundle->texMods[tm], (float*)src, (float*)dst);
+			}
 			break;
 
 		case TMOD_SCALE_OFFSET:
-			for ( i = 0; i < tess.numVertexes; i++ ) {
-				dst[i][0] = (src[i][0] * bundle->texMods[tm].scale[0] ) + bundle->texMods[tm].offset[0];
-				dst[i][1] = (src[i][1] * bundle->texMods[tm].scale[1] ) + bundle->texMods[tm].offset[1];
+			if (!r_gpu_uv_transform->integer)
+			{
+				for ( i = 0; i < tess.numVertexes; i++ ) {
+					dst[i][0] = (src[i][0] * bundle->texMods[tm].scale[0] ) + bundle->texMods[tm].offset[0];
+					dst[i][1] = (src[i][1] * bundle->texMods[tm].scale[1] ) + bundle->texMods[tm].offset[1];
+				}
+				src = dst;
 			}
-			src = dst;
+			else
+			{
+				bundle->texMods[tm].matrix[0][0] = bundle->texMods[tm].scale[0];
+				bundle->texMods[tm].matrix[0][1] = 0;
+				bundle->texMods[tm].matrix[1][0] = 0;
+				bundle->texMods[tm].matrix[1][1] = bundle->texMods[tm].scale[1];
+				bundle->texMods[tm].translate[0] = bundle->texMods[tm].offset[0];
+				bundle->texMods[tm].translate[1] = bundle->texMods[tm].offset[1];
+				RB_CalcTransformTexCoords(&bundle->texMods[tm], (float*)src, (float*)dst);
+			}
 			break;
 
 		case TMOD_OFFSET_SCALE:
-			for ( i = 0; i < tess.numVertexes; i++ ) {
-				dst[i][0] = (src[i][0] + bundle->texMods[tm].offset[0]) * bundle->texMods[tm].scale[0];
-				dst[i][1] = (src[i][1] + bundle->texMods[tm].offset[1]) * bundle->texMods[tm].scale[1];
+			if (!r_gpu_uv_transform->integer)
+			{
+				for ( i = 0; i < tess.numVertexes; i++ ) {
+					dst[i][0] = (src[i][0] + bundle->texMods[tm].offset[0]) * bundle->texMods[tm].scale[0];
+					dst[i][1] = (src[i][1] + bundle->texMods[tm].offset[1]) * bundle->texMods[tm].scale[1];
+				}
+				src = dst;
 			}
-			src = dst;
+			else
+			{
+				bundle->texMods[tm].matrix[0][0] = bundle->texMods[tm].scale[0];
+				bundle->texMods[tm].matrix[0][1] = 0;
+				bundle->texMods[tm].matrix[1][0] = 0;
+				bundle->texMods[tm].matrix[1][1] = bundle->texMods[tm].scale[1];
+				bundle->texMods[tm].translate[0] = bundle->texMods[tm].offset[0] * bundle->texMods[tm].scale[0];
+				bundle->texMods[tm].translate[1] = bundle->texMods[tm].offset[1] * bundle->texMods[tm].scale[1];
+				RB_CalcTransformTexCoords(&bundle->texMods[tm], (float*)src, (float*)dst);
+			}
 			break;
 
 		case TMOD_STRETCH:
-			RB_CalcStretchTexCoords( &bundle->texMods[tm].wave, (float *)src, (float *) dst );
-			src = dst;
+			src = RB_CalcStretchTexCoords( &bundle->texMods[tm].wave, (float *)src, (float *) dst );
 			break;
 
 		case TMOD_TRANSFORM:
-			RB_CalcTransformTexCoords( &bundle->texMods[tm], (float *)src, (float *) dst );
-			src = dst;
+			src = RB_CalcTransformTexCoords( &bundle->texMods[tm], (float *)src, (float *) dst );
 			break;
 
 		case TMOD_ROTATE:
-			RB_CalcRotateTexCoords( bundle->texMods[tm].rotateSpeed, (float *) src, (float *) dst );
-			src = dst;
+			src = RB_CalcRotateTexCoords( bundle->texMods[tm].rotateSpeed, (float *) src, (float *) dst );
 			break;
 
 		default:
@@ -811,6 +937,26 @@ void R_ComputeTexCoords( const int b, const textureBundle_t *bundle ) {
 	}
 
 	tess.svars.texcoordPtr[ b ] = src;
+
+compute_tex_end:
+	if (r_gpu_uv_transform->integer)
+	{
+		GLint matrixMode = 0;
+		GLint activeTexture = -1;
+
+		qglGetIntegerv(GL_MATRIX_MODE, &matrixMode);
+		qglGetIntegerv(GL_ACTIVE_TEXTURE, &activeTexture);
+
+		qglMatrixMode(GL_TEXTURE);
+
+		if (qglActiveTextureARB)
+			qglActiveTextureARB(GL_TEXTURE0_ARB + b);
+		qglLoadMatrixf(g_texcoords_mats[b]);
+
+		qglMatrixMode(matrixMode);
+		if (qglActiveTextureARB)
+			qglActiveTextureARB(activeTexture);
+	}
 }
 
 
@@ -873,6 +1019,8 @@ static void RB_IterateStagesGeneric( const shaderCommands_t *input )
 		if ( r_lightmap->integer && ( pStage->bundle[0].lightmap != LIGHTMAP_INDEX_NONE || pStage->bundle[1].lightmap != LIGHTMAP_INDEX_NONE ) )
 			break;
 	}
+
+	ComputeTexCoords_ClearTransforms();
 }
 
 

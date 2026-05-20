@@ -813,16 +813,20 @@ void R_ComputeTexCoords( const int b, const textureBundle_t *bundle ) {
 		RB_CalcFogTexCoords( ( float * ) dst );
 		break;
 	case TCGEN_ENVIRONMENT_MAPPED:
-		if (r_environmentMapping->integer)
-			RB_CalcEnvironmentTexCoords( ( float * ) dst );
-		else
-			src = tess.texCoords[0];
+		switch (r_environmentMapping->integer)
+		{
+		case 1:  RB_CalcEnvironmentTexCoords( ( float * ) dst ); break;
+		case 0:  src = tess.texCoords00; break;
+		default: src = tess.texCoords[0]; break;
+		}
 		break;
 	case TCGEN_ENVIRONMENT_MAPPED_FP:
-		if (r_environmentMapping->integer)
-			RB_CalcEnvironmentTexCoordsFP( ( float * ) dst, bundle->isScreenMap );
-		else
-			src = tess.texCoords[0];
+		switch (r_environmentMapping->integer)
+		{
+		case 1:  RB_CalcEnvironmentTexCoordsFP( ( float * ) dst, bundle->isScreenMap ); break;
+		case 0:  src = tess.texCoords00; break;
+		default: src = tess.texCoords[0]; break;
+		}
 		break;
 	case TCGEN_BAD:
 		goto compute_tex_end;

@@ -256,7 +256,7 @@ static void RE_AddDynamicLightToScene( const vec3_t org, float intensity, float 
 	{
 		vec3_t color = { r, g, b };
 		//float radius = intensity * r_dlightScale->value;
-		rmx_light_add(LIGHT_DYNAMIC, r_rmxdlights - r_firstSceneDlight, org, org, color, intensity);
+		rmx_light_add(LIGHT_DYNAMIC, r_rmxdlights, org, org, color, intensity);
 		r_rmxdlights++;
 	}
 	if ( r_numdlights >= ARRAY_LEN( backEndData->dlights ) ) {
@@ -512,6 +512,12 @@ void RE_RenderScene( const refdef_t *fd ) {
 	VectorCopy( fd->viewaxis[2], parms.or.axis[2] );
 
 	VectorCopy( fd->vieworg, parms.pvsOrigin );
+
+	const float identity[9] = { 1, 0, 0, 0, 1, 0, 0, 0, 1 };
+	if (0 != memcmp(identity, fd->viewaxis, sizeof(identity)))
+	{
+		rmx_setplayerpos(fd->vieworg, fd->viewaxis[0]);
+	}
 
 	R_RenderView( &parms );
 

@@ -1220,7 +1220,8 @@ void IN_Frame( void ) {
 	WIN_EnableHook();
 
 	// post events to the system que
-	IN_MouseMove();
+	if (s_wmv.mouseActive)
+		IN_MouseMove();
 }
 
 

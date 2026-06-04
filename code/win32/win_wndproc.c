@@ -492,6 +492,9 @@ static UINT uTimerM;
 static UINT uTimerT;
 
 void WIN_Minimize( void ) {
+#if 1
+	Com_Printf("WARNING: WIN_Minimize is disabled in this version!\n");
+#else
 	static int minimize = 0;
 
 	if ( minimize )
@@ -515,6 +518,7 @@ void WIN_Minimize( void ) {
 #endif
 
 	minimize = 0;
+#endif
 }
 
 

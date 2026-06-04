@@ -822,6 +822,8 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 		Sys_ShowConsole( 0, qfalse );
 	}
 
+	SetFocus(g_wv.hWnd);
+
 	// main game loop
 	while ( 1 ) {
 		// set low precision every frame, because some system calls

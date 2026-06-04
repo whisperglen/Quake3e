@@ -776,8 +776,8 @@ static qboolean GLW_CreateWindow( int width, int height, int colorbits, qboolean
 		return qfalse;
 	}
 
-	//SetForegroundWindow( g_wv.hWnd );
-	//SetFocus( g_wv.hWnd );
+	SetForegroundWindow( g_wv.hWnd );
+	SetFocus( g_wv.hWnd );
 
 	//ShowWindow( g_wv.hWnd, SW_SHOW );
 	//UpdateWindow( g_wv.hWnd );

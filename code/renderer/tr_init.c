@@ -28,6 +28,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "qindiegl/qindie_rmx.h"
 
 static gameparamret_t __cdecl RMX_implement_api(gameops_t op, gameparam_t p0, gameparam_t p1, gameparam_t p2);
+static void q3_flashlight_toggle(void);
 
 glconfig_t	glConfig;
 qboolean	nonPowerOfTwoTextures;
@@ -199,7 +200,6 @@ int		max_polyverts;
 
 cvar_t* r_rmx_coronas;
 cvar_t* r_rmx_dynamiclight;
-cvar_t* r_rmx_flashlight;
 cvar_t* r_environmentMapping;
 cvar_t* r_turbulentTextures;
 cvar_t* r_novertex_colors;
@@ -1491,6 +1491,7 @@ static void R_Register( void )
 	ri.Cmd_AddCommand( "screenshotJPEG", R_ScreenShot_f );
 	ri.Cmd_AddCommand( "screenshotBMP", R_ScreenShot_f );
 	ri.Cmd_AddCommand( "gfxinfo", GfxInfo_f );
+	ri.Cmd_AddCommand( "rmx_flashlight_toggle", q3_flashlight_toggle );
 
 	//
 	// temporary latched variables that can only change over a restart
@@ -1765,7 +1766,6 @@ static void R_Register( void )
 
 	r_rmx_coronas = ri.Cvar_Get("r_rmx_coronas", "0", CVAR_ARCHIVE_ND);
 	r_rmx_dynamiclight = ri.Cvar_Get("r_rmx_dynamiclight", "0", CVAR_ARCHIVE_ND);
-	r_rmx_flashlight = ri.Cvar_Get("r_rmx_flashlight", "0", CVAR_TEMP);
 
 	r_environmentMapping = ri.Cvar_Get("r_environmentMapping", "1", CVAR_ARCHIVE);
 	r_turbulentTextures = ri.Cvar_Get("r_turbulentTextures", "1", CVAR_ARCHIVE);
@@ -1944,6 +1944,7 @@ static void RE_Shutdown( refShutdownCode_t code ) {
 	ri.Cmd_RemoveCommand( "skinlist" );
 	ri.Cmd_RemoveCommand( "gfxinfo" );
 	ri.Cmd_RemoveCommand( "shaderstate" );
+	ri.Cmd_RemoveCommand( "rmx_flashlight_toggle" );
 
 	//if ( tr.registered ) {
 		//R_IssuePendingRenderCommands();
@@ -2178,4 +2179,11 @@ static gameparamret_t __cdecl RMX_implement_api(gameops_t op, gameparam_t p0, ga
 	}
 
 	return ret;
+}
+
+static void q3_flashlight_toggle(void)
+{
+	rmx_flashlight_enable(-1);
+	//play a switch sound
+	ri.Cmd_ExecuteText(EXEC_APPEND, "play sound/items/use_nothing.wav");
 }

@@ -414,19 +414,6 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 		r_rmx_coronas->modified = qfalse;
 		rmx_lights_clear(LIGHT_CORONA);
 	}
-	if (r_rmx_flashlight->modified)
-	{
-		r_rmx_flashlight->modified = qfalse;
-		if (!r_rmx_flashlight->integer)
-		{   //delete the light
-			rmx_lights_clear(LIGHT_FLASHLIGHT);
-		}
-		if (r_rmx_flashlight->modificationCount > 1)
-		{   //play a switch sound
-			ri.Cmd_ExecuteText(EXEC_APPEND, "play sound/items/use_nothing.wav");
-			//ri.Cmd_ExecuteText( EXEC_APPEND, "play sound/movers/invis_user_off.wav" );
-		}
-	}
 
 	tr.refdef.stereoFrame = stereoFrame;
 }
